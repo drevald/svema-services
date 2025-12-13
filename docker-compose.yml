@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  face-recognition:
+    build: ./face-recognition
+    container_name: svema-face-recognition
+    ports:
+      - "5555:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - svema-network
+
+  shot-captioning:
+    build: ./shot-captioning
+    container_name: svema-shot-captioning
+    ports:
+      - "5556:5556"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DB_HOST=postgres
+      - DB_PORT=5433
+      - DB_NAME=svema
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - MODEL_NAME=Salesforce/blip2-flan-t5-xl
+    volumes:
+      # Mount storage to access photo files
+      - /storage:/storage:ro
+    restart: unless-stopped
+    networks:
+      - svema-network
+    depends_on:
+      - face-recognition
+
+networks:
+  svema-network:
+    external: true
+    name: svema_svema-network
