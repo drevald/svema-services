@@ -5,10 +5,11 @@ services:
     build: ./face-recognition
     container_name: svema-face-recognition
     ports:
-      - "5555:5000"
+      - "5555:5555"
     environment:
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
+      - USE_CNN_MODEL=true
     restart: unless-stopped
     networks:
       - svema-network
@@ -20,20 +21,18 @@ services:
       - "5556:5556"
     environment:
       - PYTHONUNBUFFERED=1
-      - DB_HOST=postgres
-      - DB_PORT=5433
-      - DB_NAME=svema
-      - DB_USER=postgres
-      - DB_PASSWORD=password
-      - MODEL_NAME=Salesforce/blip2-flan-t5-xl
+      - MODEL_NAME=Salesforce/blip2-opt-2.7b
     volumes:
-      # Mount storage to access photo files
-      - /storage:/storage:ro
+      # Cache Hugging Face models to avoid re-downloading
+      - huggingface-cache:/root/.cache/huggingface
     restart: unless-stopped
     networks:
       - svema-network
     depends_on:
       - face-recognition
+
+volumes:
+  huggingface-cache:
 
 networks:
   svema-network:

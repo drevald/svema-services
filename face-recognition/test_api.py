@@ -16,7 +16,7 @@ img_bytes.seek(0)
 # Test /detect endpoint
 print("Testing /detect endpoint...")
 response = requests.post(
-    'http://localhost:5000/detect',
+    'http://localhost:5555/detect',
     files={'image': ('test.jpg', img_bytes, 'image/jpeg')}
 )
 
@@ -32,7 +32,7 @@ sample_encodings = [
 ]
 
 response = requests.post(
-    'http://localhost:5000/cluster',
+    'http://localhost:5555/cluster',
     json={'encodings': sample_encodings}
 )
 
