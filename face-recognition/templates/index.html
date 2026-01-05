@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .model-info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f7f7f7;
+            border-radius: 10px;
+        }
+        .model-info strong {
+            color: #f5576c;
+        }
+        .upload-form {
+            margin-bottom: 30px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-input-label {
+            display: block;
+            padding: 20px;
+            background: #f7f7f7;
+            border: 2px dashed #f5576c;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-input-label:hover {
+            background: #fff0f3;
+            border-color: #f093fb;
+        }
+        .file-input-label.has-file {
+            background: #fff0f3;
+            border-color: #f5576c;
+            border-style: solid;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        .result {
+            margin-top: 30px;
+        }
+        .result-image {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .face-count-box {
+            padding: 20px;
+            background: #f7f7f7;
+            border-left: 4px solid #f5576c;
+            border-radius: 5px;
+            font-size: 1.1em;
+            color: #333;
+            line-height: 1.6;
+        }
+        .face-count-box strong {
+            color: #f5576c;
+            font-size: 1.3em;
+        }
+        .error {
+            padding: 15px;
+            background: #fee;
+            border-left: 4px solid #e33;
+            border-radius: 5px;
+            color: #c33;
+            margin-bottom: 20px;
+        }
+        .info-text {
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Face Detection</h1>
+        <div class="model-info">
+            <p><strong>Detection Model:</strong> {{ model_type }}</p>
+            <p style="font-size: 0.9em; margin-top: 5px;">Advanced filtering with facial landmark validation</p>
+        </div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+            <div class="file-input-wrapper">
+                <input type="file" name="image" id="imageInput" accept="image/*" required>
+                <label for="imageInput" class="file-input-label" id="fileLabel">
+                    <span id="labelText">Click to select an image or drag and drop</span>
+                </label>
+            </div>
+            <button type="submit" class="submit-btn">Detect Faces</button>
+        </form>
+
+        {% if face_count is defined %}
+        <div class="result">
+            <img src="data:image/jpeg;base64,{{ image_data }}" alt="Processed image" class="result-image">
+            <div class="face-count-box">
+                {% if face_count == 0 %}
+                <strong>No faces detected</strong>
+                <p style="margin-top: 10px; color: #666;">The image was processed but no faces were found.</p>
+                {% elif face_count == 1 %}
+                <strong>1 face detected</strong>
+                <p style="margin-top: 10px; color: #666;">Green boxes show the detected face with facial landmarks validated.</p>
+                {% else %}
+                <strong>{{ face_count }} faces detected</strong>
+                <p style="margin-top: 10px; color: #666;">Green boxes show the detected faces with facial landmarks validated.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <p class="info-text">
+            Uses advanced face detection with size, aspect ratio, and facial feature validation to reduce false positives.
+        </p>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('imageInput');
+        const fileLabel = document.getElementById('fileLabel');
+        const labelText = document.getElementById('labelText');
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                labelText.textContent = 'Selected: ' + e.target.files[0].name;
+                fileLabel.classList.add('has-file');
+            } else {
+                labelText.textContent = 'Click to select an image or drag and drop';
+                fileLabel.classList.remove('has-file');
+            }
+        });
+
+        // Drag and drop
+        fileLabel.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileLabel.style.borderColor = '#f093fb';
+            fileLabel.style.background = '#fff0f3';
+        });
+
+        fileLabel.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileLabel.style.borderColor = '#f5576c';
+            fileLabel.style.background = '#f7f7f7';
+        });
+
+        fileLabel.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileLabel.style.borderColor = '#f5576c';
+            fileLabel.style.background = '#f7f7f7';
+
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                labelText.textContent = 'Selected: ' + e.dataTransfer.files[0].name;
+                fileLabel.classList.add('has-file');
+            }
+        });
+    </script>
+</body>
+</html>
