@@ -9,8 +9,11 @@ services:
     environment:
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
-      - USE_CNN_MODEL=true
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     networks:
       - svema-network
 
@@ -21,18 +24,17 @@ services:
       - "5556:5556"
     environment:
       - PYTHONUNBUFFERED=1
-      - MODEL_NAME=Salesforce/blip2-opt-2.7b
-    volumes:
-      # Cache Hugging Face models to avoid re-downloading
-      - huggingface-cache:/root/.cache/huggingface
+      - OLLAMA_BASE_URL=http://192.168.0.189:11434
+      - MODEL_NAME=llava-llama3
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     networks:
       - svema-network
     depends_on:
       - face-recognition
-
-volumes:
-  huggingface-cache:
 
 networks:
   svema-network:

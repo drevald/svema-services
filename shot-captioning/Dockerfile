@@ -17,6 +17,7 @@ COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY app.py .
+COPY templates ./templates
 
 # Expose port
 EXPOSE 5556
