@@ -24,7 +24,7 @@ services:
       - "5556:5556"
     environment:
       - PYTHONUNBUFFERED=1
-      - OLLAMA_BASE_URL=http://192.168.0.189:11434
+      - OLLAMA_BASE_URL=http://192.168.0.134:11434
       - MODEL_NAME=llava-llama3
     restart: unless-stopped
     deploy:

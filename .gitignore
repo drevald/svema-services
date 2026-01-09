@@ -28,3 +28,9 @@ Thumbs.db
 .env
 .env.local
 .venv
+
+# Claude Code
+.claude/
+
+# Windows errors
+nul
