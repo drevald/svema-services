@@ -26,7 +26,7 @@ except Exception as e:
     face_app = None
 
 
-def detect_faces_with_insightface(image_bytes):
+def detect_faces_with_insightface(image_bytes, shot_id=None):
     """
     Detect faces using InsightFace.
     Returns list of face detections with locations and embeddings.
@@ -46,7 +46,8 @@ def detect_faces_with_insightface(image_bytes):
         # Detect faces
         faces = face_app.get(img_bgr)
 
-        logger.info(f"InsightFace detected {len(faces)} face(s)")
+        shot_info = f" for shot_id={shot_id}" if shot_id else ""
+        logger.info(f"InsightFace detected {len(faces)} face(s){shot_info}")
 
         # Convert to our format
         face_detections = []
@@ -71,12 +72,13 @@ def detect_faces_with_insightface(image_bytes):
                 'confidence': float(face.det_score)
             })
 
-            logger.info(f"Face {idx+1}: bbox=({left},{top},{right},{bottom}), confidence={face.det_score:.3f}")
+            logger.info(f"Shot {shot_id} - Face {idx+1}: bbox=({left},{top},{right},{bottom}), confidence={face.det_score:.3f}")
 
         return face_detections
 
     except Exception as e:
-        logger.error(f"Error detecting faces with InsightFace: {e}", exc_info=True)
+        shot_info = f" for shot_id={shot_id}" if shot_id else ""
+        logger.error(f"Error detecting faces with InsightFace{shot_info}: {e}", exc_info=True)
         return []
 
 
@@ -180,8 +182,11 @@ def detect_faces():
         image_file = request.files['image']
         image_bytes = image_file.read()
 
+        # Get optional shot_id for logging
+        shot_id = request.form.get('shot_id', None)
+
         # Detect faces using InsightFace
-        faces_data = detect_faces_with_insightface(image_bytes)
+        faces_data = detect_faces_with_insightface(image_bytes, shot_id)
 
         if not faces_data:
             return jsonify({
@@ -207,7 +212,8 @@ def detect_faces():
                 "confidence": face_info['confidence']
             })
 
-        logger.info(f"Detected {len(faces)} face(s)")
+        shot_info = f" for shot_id={shot_id}" if shot_id else ""
+        logger.info(f"Detected {len(faces)} face(s){shot_info}")
 
         return jsonify({
             "faces": faces,
